@@ -5,6 +5,8 @@ A little script I wrote for convenience. I wanted to get emails when I got updat
 It uses selenium to log in to Deakin Single Signon, and retrieves an ontrack authentication token from the cookies in the automated browser.
 After that's done, which takes the majority of the running time, it uses the auth token to access the ontrack api
 
+If that kinda automation isn't your thing, you can always go into your own browser, copy the ontrack authentication token from there and then create the Ontrack object by passing the auth token you have copied. 
+
 At this point, it's as easy as accessing some urls and filtering the JSON data to find the tasks that have updates
 
 The script uses SMTP to send emails to a designated address.
