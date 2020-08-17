@@ -39,7 +39,6 @@ class SingleSignon:
 
     def try_get_ele_by_id(self, id):
         count = 0
-        result = ''
         while(count != SEL_RETRIES):
             try:
                 return self.driver.find_element_by_id(id)
@@ -48,14 +47,13 @@ class SingleSignon:
                 print("Attempt {}. Couldn't find {}. Will retry in {} seconds".format(count,id,SLEEP_TIME))
                 time.sleep(SLEEP_TIME)
 
-        if not result:
-            print("Couldn't find {} after max retries. Quitting...".format(id))
-            sys.exit(0)
+
+        print("Couldn't find {} after max retries. Quitting...".format(id))
+        sys.exit(0)
 
 
     def try_get_ele_by_class_name(self, name):
         count = 0
-        result = ''
         while(count != SEL_RETRIES):
             try:
                 return self.driver.find_element_by_class_name(name)
@@ -64,9 +62,9 @@ class SingleSignon:
                 print("Attempt {}. Couldn't find {}. Will retry in {} seconds".format(count,name,SLEEP_TIME))
                 time.sleep(SLEEP_TIME)
 
-        if not result:
-            print("Couldn't find {} after max retries. Quitting...".format(name))
-            sys.exit(0)
+
+        print("Couldn't find {} after max retries. Quitting...".format(name))
+        sys.exit(0)
 
         print("oops!!!")
     # login to the ontrack site via selenium
@@ -115,6 +113,7 @@ class SingleSignon:
 
         identity = json.loads(urllib.parse.unquote(auth))
         auth_token = identity['authenticationToken']
+        print("We're in business, we've got the auth token")
         self.driver.quit()
 
         return auth_token
