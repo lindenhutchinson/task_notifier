@@ -70,9 +70,10 @@ if __name__ == "__main__":
 
     proj_id = 18033
     task_def_id = 3700
-    task_def_id = ''
+    comment = ''
     weeks_requested = 1
-    print(o.request_extension(proj_id, task_def_id,task_def_id, weeks_requested))
+
+    print(o.request_extension(proj_id, task_def_id,comment, weeks_requested))
 
 
 
