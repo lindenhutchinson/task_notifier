@@ -59,11 +59,22 @@ if __name__ == "__main__":
 
     emailer = Emailer(sender_email, e_pm, receiver_email)
 
-    driver_path = os.path.join(current_file_dir, "chromedriver")
-    ss = SingleSignon(deakin_username, d_pm, driver_path, False)
-    o = Ontrack(ss.get_auth_token(), emailer)
+    # driver_path = os.path.join(current_file_dir, "chromedriver")
+    # run_selenium_headless = False
+    # ss = SingleSignon(deakin_username, d_pm, driver_path, run_selenium_headless)
 
-    print(o.get_projects())
+    # for simply playing around with the script, it's often easier to get the auth token from your browser
+    # then pass it into the Ontrack constructor
+    # auth_token = ss.get_auth_token()
+    o = Ontrack('auth_token_here', emailer)
+
+    proj_id = 18033
+    task_def_id = 3700
+    task_def_id = ''
+    weeks_requested = 1
+    print(o.request_extension(proj_id, task_def_id,task_def_id, weeks_requested))
+
+
 
 
 # get_project_tasks(proj_id)

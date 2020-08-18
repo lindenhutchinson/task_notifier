@@ -8,6 +8,13 @@ class Ontrack:
         self.auth_token = auth_token
         self.emailer = emailer
 
+    def send_payload_with_request(self, url, data):
+        session = requests.Session()
+        r = session.post(url, params={'auth_token': self.auth_token}, data=data)
+        res = json.loads(r.text)
+        session.close()
+        return res
+
     def get_api_json(self, url):
         session = requests.Session()
         r = session.get(url, params={'auth_token': self.auth_token})
@@ -81,6 +88,11 @@ class Ontrack:
 
         return updates
 
+    def request_extension(self, proj_id, task_def_id, comment, weeks_requested):
+        data = {'comment':comment, 'weeks_requested':weeks_requested}
+        response = self.send_payload_with_request('https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/request_extension'.format(proj_id, task_def_id), data)
+        return response
+
     # get all new comments for a task
     def get_new_task_comments(self, proj_id, task_def_id):
         task_info = self.get_api_json(
@@ -117,3 +129,5 @@ class Ontrack:
             self.emailer.send_ontrack_msg(email, update_count)
         else:
             print("No updates to email")
+
+        
