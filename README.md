@@ -45,12 +45,12 @@ This will sleep between every attempt and will exit the program if it doesn't fi
 Upon finding the authentication token in the cookies after your automated login to ontrack, the actual accessing the API is a lot faster.
 
 If you don't want to mess around with selenium and just want to try out the script, you can easily pass in an auth_token from your browser, created after you login.
-You can find this by pressing F12 then going to the network tab. From here it should be easy to see some urls that look like
+You can find this by pressing F12 then going to the network tab. From here you should see some URLs that look like
 
 	https://ontrack.deakin.edu.au/api/projects?auth_token=AUTH TOKEN WILL BE HERE&include_inactive=true
 
 just paste that value into the Ontrack constructor and you'll skip the entire slow part of the script.
-Ontrack(auth_token, emailer)
+
 
 ## Emailer
 
