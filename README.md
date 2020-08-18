@@ -31,14 +31,16 @@ They do pretty much what's on the box.
 It uses selenium to log in to Deakin Single Signon, and retrieves an ontrack authentication token from the cookies in the automated browser.
 This process takes the longest amount of time, because selenium is so slow and prone to skipping over elements that it's looking for.
 
-There are two constnats at the top of single_signon.py
-SLEEP_TIME and SEL_RETRIES
+There are two constants at the top of single_signon.py
+
+* SLEEP_TIME
+* SEL_RETRIES
 
 There are a number of sleeps in the program to give selenium plenty of time to find what it's looking for.
 Depending on your system, you may need to increase the sleep time.
 
 SEL_RETRIES is the number of times the program will attempt to search for an element on the webpage. 
-This will sleep every re-attempt and will exit the program if it doesn't find the element.
+This will sleep between every attempt and will exit the program if it doesn't find the element after the set amount of times.
 
 Upon finding the authentication token in the cookies after your automated login to ontrack, the actual accessing the API is a lot faster.
 
