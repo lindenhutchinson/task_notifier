@@ -4,7 +4,7 @@ A little script I wrote so I could receive emails when my tasks have been update
 Then I wrote a program to check for updates and email me if my tutors have marked any of my tasks off or replied to my messages.
 I run this on crontab on my raspberry pi
 
-## Passwoord_Manager
+## Password_Manager
 
 There is a password encryption manager I wrote that uses symmetric encryption so there's no need to store passwords in plaintext.
 To use this, you'll first need to run the below function to generate a key and your encrypted password string.
@@ -19,9 +19,10 @@ The password_manager class only deals with values in bytes so when you're passin
 ## Main
 
 If you want to use selenium, you'll probably want to check some of these out:
-string driver_path
-bool run_selenium_headless
-bool verbose
+
+* string driver_path
+* bool run_selenium_headless
+* bool verbose
 
 They do pretty much what's on the box.
 
