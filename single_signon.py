@@ -31,8 +31,8 @@ class SingleSignon:
             chrome_options.add_argument('--headless')
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument("--enable-javascript")
-        chrome_options.add_argument("--no-sandbox");
-        chrome_options.add_argument("--disable-dev-shm-usage");
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         driver = webdriver.Chrome(
             options=chrome_options, executable_path=self.sel_dir)
 
@@ -98,7 +98,7 @@ class SingleSignon:
 
         if self.is_text_present('The service you are trying to access is connected to the Australian Access Federation. Select your organisation below to log in.'):
             if self.verbose:
-                print("We have logged in")
+                print("We have logged in - I saw the correct text on the page")
         else:
             if self.verbose:
                 print("Something has gone wrong with the deakin authentication")
