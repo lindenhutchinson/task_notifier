@@ -117,8 +117,8 @@ class SingleSignon:
             print("Ideally we should be authenticated with DSS now. Will now access the ontrack homepage again")
         self.driver.get("https://ontrack.deakin.edu.au/#/home")
         if self.verbose:
-            print("Selenium has loaded the ontrack page, but we will give it {} seconds to fully load".format(SLEEP_TIME*2))
-        time.sleep(SLEEP_TIME*2)
+            print("Selenium has loaded the ontrack page, but the script often fails here so we will give it {} seconds to fully load".format(SLEEP_TIME*2.5))
+        time.sleep(SLEEP_TIME*2.5)
 
     # after logging in to ontrack, capture the created auth token so we can access the API
     def get_auth_token(self):

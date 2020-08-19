@@ -4,9 +4,8 @@ import datetime
 import urllib.parse
 
 class Ontrack:
-    def __init__(self, auth_token, emailer):
+    def __init__(self, auth_token):
         self.auth_token = auth_token
-        self.emailer = emailer
 
     def send_payload_with_request(self, url, data):
         session = requests.Session()
@@ -126,8 +125,8 @@ class Ontrack:
                 email += '\n'
 
         if not first:
-            self.emailer.send_ontrack_msg(email, update_count)
+            return (email, update_count)
         else:
-            print("No updates to email")
+            return 0 
 
         

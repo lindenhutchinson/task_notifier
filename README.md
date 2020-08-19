@@ -1,8 +1,16 @@
 # task_emailer
 
-A little script I wrote so I could receive emails when my tasks have been updated on ontrack. It didn't natively have this feature, so I figured out how to access the api. 
-Then I wrote a program to check for updates and email me if my tutors have marked any of my tasks off or replied to my messages.
-I run this on crontab on my raspberry pi
+A little script so I can receive emails when my tasks have been updated on ontrack. Ontrack didn't natively have this feature, so I figured out how to access the api and I wrote this program to check for updates and email me if my tutors have marked any of my tasks off or replied to my messages.
+I run this on crontab on a raspberry pi.
+
+If you don't want to mess around with selenium and just want to try out the script, you can easily pass in an auth_token from your browser, created after you login.
+You can find this by pressing F12 then going to the network tab. From here you should see some URLs that look like
+
+	https://ontrack.deakin.edu.au/api/projects?auth_token=AUTH TOKEN WILL BE HERE&include_inactive=true
+
+just paste that value into the Ontrack constructor and you'll skip the entire slow part of the script.
+
+I recommending calling get_projects() first so you have access to unit_id and proj_id which are required for most of the other functions.
 
 ## Password_Manager
 
@@ -14,7 +22,7 @@ print_key_and_pass('your-password-here'.encode("utf-8"))
 I do this twice for each password (email and deakin) but you could use the same key twice.
 
 I save the key in a local file and the encrypted password is stored either in an environment variable or directly on the document.
-The password_manager class only deals with values in bytes so when you're passing strings directly, use .encode("utf-8")
+The password_manager class only deals with values in bytes so when you're passing strings directly, use .encode("utf-8") or b'this string is in bytes'
 
 ## Main
 
@@ -44,20 +52,7 @@ This will sleep between every attempt and will exit the program if it doesn't fi
 
 Upon finding the authentication token in the cookies after your automated login to ontrack, the actual accessing the API is a lot faster.
 
-If you don't want to mess around with selenium and just want to try out the script, you can easily pass in an auth_token from your browser, created after you login.
-You can find this by pressing F12 then going to the network tab. From here you should see some URLs that look like
-
-	https://ontrack.deakin.edu.au/api/projects?auth_token=AUTH TOKEN WILL BE HERE&include_inactive=true
-
-just paste that value into the Ontrack constructor and you'll skip the entire slow part of the script.
-
-
 ## Emailer
 
 The script uses SMTP to send emails to a designated address.
 If you want to use a gmail account as the sender, you will need to have its access level set to lowest security
-
-The function get_updated_email() will call the required functions to check every unit for any task updates, then formats and sends these as an email
-
-
-
