@@ -1,29 +1,27 @@
 from cryptography.fernet import Fernet
 
 class PasswordManager:
-    def __init__(self,p):
-        self.p = p
-        self.crypto = False
+    @staticmethod
+    def make_key():
+        return PasswordManager.ensure_as_str(Fernet.generate_key())
 
-    def use_key(self, key):
-        self.crypto = Fernet(key)
+    @staticmethod
+    def encrypt(key, password):
+        key = PasswordManager.ensure_as_bytes(key)
+        password = PasswordManager.ensure_as_bytes(password)
+        return PasswordManager.ensure_as_str(Fernet(key).encrypt(password))
 
-        
-    # use this function to generate keys, then save them as a local file
-    def make_key(self):
-        key = Fernet.generate_key()
-        self.use_key(key)
-        return key
+    @staticmethod
+    def decrypt(key, password):
+        key = PasswordManager.ensure_as_bytes(key)
+        password = PasswordManager.ensure_as_bytes(password)
+        return PasswordManager.ensure_as_str(Fernet(key).decrypt(password))
 
-    # I use this to encrypt my passwords then store them as env variables
-    def encrypt(self, password):
-        if not self.crypto:
-            print("You don't have a key so you won't be able to encrypt that password")
-        return self.crypto.encrypt(password)
+    @staticmethod
+    def ensure_as_bytes(content):
+        return content.encode("utf-8")
 
-    # this function is used in the script to retrieve the plaintext password
-    def decode(self):
-        if not self.crypto:
-            print("You don't have a key so you won't be able to decrypt that password")
+    @staticmethod
+    def ensure_as_str(content):
+        return str(content).strip("b' '")
 
-        return str(self.crypto.decrypt(self.p)).strip("b' '")

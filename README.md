@@ -1,4 +1,4 @@
-# task_emailer
+# Track Notifier 
 
 A little script so I can receive emails when my tasks have been updated on ontrack. Ontrack didn't natively have this feature, so I figured out how to access the api and I wrote this program to check for updates and email me if my tutors have marked any of my tasks off or replied to my messages.
 I run this on crontab on a raspberry pi.

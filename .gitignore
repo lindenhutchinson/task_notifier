@@ -1,7 +1,9 @@
 chromedriver.exe
-ekey
-dkey
 __pycache__/
 .vscode/
 .main.py.swp
 logs/
+.env
+bash.exe.stackdump
+auth_token.txt
+venv/

@@ -3,27 +3,37 @@ import json
 import datetime
 import urllib.parse
 
+
 class Ontrack:
-    def __init__(self, auth_token):
+    def __init__(self, username, auth_token):
+        self.username = username
         self.auth_token = auth_token
 
-    def send_payload_with_request(self, url, data):
+    def make_post_request(self, url, data):
         session = requests.Session()
-        r = session.post(url, params={'auth_token': self.auth_token}, data=data)
+        r = session.post(
+            url, params={'auth_token': self.auth_token}, data=data)
         res = json.loads(r.text)
         session.close()
         return res
 
-    def get_api_json(self, url):
+    def make_get_request(self, url):
         session = requests.Session()
         r = session.get(url, params={'auth_token': self.auth_token})
         res = json.loads(r.text)
         session.close()
         return res
 
+    def make_put_request(self, url, params):
+        session = requests.Session()
+        r = session.put(url, params=params)
+        res = json.loads(r.text)
+        session.close()
+        return res
+
     def get_current_teaching_period(self):
         url = 'https://ontrack.deakin.edu.au/api/teaching_periods'
-        periods = self.get_api_json(url)
+        periods = self.make_get_request(url)
         now = datetime.datetime.now()
         current = 0
         for period in periods:
@@ -41,7 +51,7 @@ class Ontrack:
         url = 'https://ontrack.deakin.edu.au/api/projects'
         units = []
         current_period_id = self.get_current_teaching_period()['id']
-        for proj in self.get_api_json(url):
+        for proj in self.make_get_request(url):
             if proj['teaching_period_id'] == current_period_id:
                 units.append(proj)
 
@@ -50,7 +60,7 @@ class Ontrack:
     # get information for a unit
     def get_project(self, proj_id):
         url = 'https://ontrack.deakin.edu.au/api/projects/{}'.format(proj_id)
-        return self.get_api_json(url)
+        return self.make_get_request(url)
 
     # get all released tasks for a unit
     def get_project_tasks(self, proj_id):
@@ -60,7 +70,7 @@ class Ontrack:
     # get detailed task information for a unit
     def get_task_definitions(self, unit_id):
         url = 'https://ontrack.deakin.edu.au/api/units/{}'.format(unit_id)
-        info = self.get_api_json(url)
+        info = self.make_get_request(url)
         return info['task_definitions']
 
     # get a specific task's name
@@ -88,13 +98,14 @@ class Ontrack:
         return updates
 
     def request_extension(self, proj_id, task_def_id, comment, weeks_requested):
-        data = {'comment':comment, 'weeks_requested':weeks_requested}
-        response = self.send_payload_with_request('https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/request_extension'.format(proj_id, task_def_id), data)
+        data = {'comment': comment, 'weeks_requested': weeks_requested}
+        response = self.make_post_request(
+            'https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/request_extension'.format(proj_id, task_def_id), data)
         return response
 
     # get all new comments for a task
     def get_new_task_comments(self, proj_id, task_def_id):
-        task_info = self.get_api_json(
+        task_info = self.make_get_request(
             'https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/comments'.format(proj_id, task_def_id))
         comments = []
         for task in task_info:
@@ -103,30 +114,40 @@ class Ontrack:
 
         return comments
 
-    def get_updated_email(self):
-        email = 'You have some updates!\n\n'
-        update_count = 0
+    def mark_comment_unread(self, proj_id, task_def_id, comment_id):
+        url = f"https://ontrack.deakin.edu.au/api/projects/{proj_id}/task_def_id/{task_def_id}/comments/{comment_id}"
+        self.make_post_request(url, {})
+
+    def get_update_msg(self):
+        update_data = []
+
         for p in self.get_projects():
-            u_name = p['unit_name']
-            first = True
+            data = {
+                'unit_name': p['unit_name'],
+                'tasks': []
+            }
+            updated = False
 
             updated_content = self.get_updated_tasks(p)
             for name, updates in updated_content.items():
                 if updates:
-                    if first:
-                        email += '{}\n\n'.format(u_name)
-                        first = False
+                    updated = True
+                    data['tasks'].append({
+                        'task_name': name,
+                        'messages': updates
+                    })
 
-                    email += '{}\n'.format(name)
-                    for update in updates:
-                        email += ' - {}\n'.format(update)
-                        update_count += 1
+            if updated:
+                update_data.append(data)
 
-                email += '\n'
+        return update_data
 
-        if not first:
-            return (email, update_count)
-        else:
-            return 0 
+    def refresh_auth_token(self):
+        url = f"https://ontrack.deakin.edu.au/api/auth/{self.auth_token}"
+        resp = self.make_put_request(
+            url, {'username': self.username, 'remember': True})
+        if 'error' in resp.keys():
+            return False
 
-        
+        self.auth_token = resp['auth_token']
+        return resp['auth_token']

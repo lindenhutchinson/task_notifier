@@ -1,150 +1,98 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
-import json
 import sys
-import urllib.parse
-
-
-# use this constant to allow selenium more time to find elements
-SLEEP_TIME = 10
-
-# used to determine how many times selenium should retry finding an element on the browser
-SEL_RETRIES = 3
+import urllib
+import json
+from dotenv import load_dotenv
+from password_manager import PasswordManager
+import os
 
 
 class SingleSignon:
-    def __init__(self, user, p, selenium_dir, run_headless, verbose):
-        self.username = user
-        self.password = p
-        self.sel_dir = selenium_dir
+    def __init__(self, selenium_dir, verbose=False, run_headless=True):
         self.run_headless = run_headless
         self.verbose = verbose
-        self.driver = self.make_web_driver()
+        self.driver = self.make_web_driver(selenium_dir)
 
     # create selenium driver to access ontrack webpage
-
-    def make_web_driver(self):
-        if self.verbose:
-            print("Loading selenium...")
+    def make_web_driver(self, selenium_dir):
         chrome_options = webdriver.ChromeOptions()
         if self.run_headless:
             chrome_options.add_argument('--headless')
+            
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         chrome_options.add_argument('--ignore-certificate-errors')
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         driver = webdriver.Chrome(
-            options=chrome_options, executable_path=self.sel_dir)
+            options=chrome_options, executable_path=selenium_dir)
 
-        if self.verbose:
-            print("Accessing ontrack page that will redirect us to authentication")
-        driver.get("https://ontrack.deakin.edu.au/#/home")
-        if self.verbose:
-            print("Page loaded. We will sleep for {} seconds now".format(SLEEP_TIME))
-        time.sleep(SLEEP_TIME)
         return driver
 
-    def try_get_ele_by_id(self, id):
-        count = 0
-        while(count != SEL_RETRIES):
-            try:
-                return self.driver.find_element_by_id(id)
-            except:
-                count += 1
-                if self.verbose:
-                    print("Attempt {}. Couldn't find {}. Will retry in {} seconds".format(count, id, SLEEP_TIME))
-                time.sleep(SLEEP_TIME)
 
-
-        if self.verbose:
-            print("Couldn't find {} after max retries. Quitting...".format(id)) 
-        sys.exit(0)
-
-
-    def try_get_ele_by_class_name(self, name):
-        count = 0
-        while(count != SEL_RETRIES):
-            try:
-                return self.driver.find_element_by_class_name(name)
-            except:
-                count+=1
-                if self.verbose:
-                    print("Attempt {}. Couldn't find {}. Will retry in {} seconds".format(count,name,SLEEP_TIME)) 
-                time.sleep(SLEEP_TIME)
-
-
-        if self.verbose:
-            print("Couldn't find {} after max retries. Quitting...".format(name)) 
-        sys.exit(0)
-
-    def is_text_present(self, text):
-        return str(text) in self.driver.page_source
-
-    # login to the ontrack site via selenium
-    def login_ontrack(self):
-        if self.verbose:
-            print("Logging in to ontrack...") 
+    def wait_for_element_presence(self, identifier, wait_time=10, frequency=0.5):
+        try:
+            element = WebDriverWait(self.driver, wait_time, frequency).until(EC.presence_of_element_located(identifier))
+        except TimeoutException:
+            print("Timed out waiting for element. Please try again")
+            sys.exit()
         
-        name_input = self.try_get_ele_by_id("username")
-        name_input.send_keys(self.username)
-        pass_input = self.try_get_ele_by_id("password") 
-        pass_input.send_keys(self.password.decode())
-        signin_button = self.try_get_ele_by_class_name("btn--login")
-        signin_button.click()
+        return element
+
+    def verbose_msg(self, msg):
         if self.verbose:
-            print("Have clicked the first sign in button. Will now sleep for {} seconds".format(SLEEP_TIME)) 
+            print(msg)
 
-        time.sleep(SLEEP_TIME)
+    def get_auth_token(self, username, password):
+        self.driver.get('https://ontrack.deakin.edu.au/#/home')
+        self.verbose_msg("Loading SSO login page")
 
-        if self.is_text_present('The service you are trying to access is connected to the Australian Access Federation. Select your organisation below to log in.'):
-            if self.verbose:
-                print("We have logged in - I saw the correct text on the page")
-        else:
-            if self.verbose:
-                print("Something has gone wrong with the deakin authentication")
-            raise ValueError('Unable to login to Deakin Single Signon.')
+        self.login(username, password)
+        self.verbose_msg("Submitted username and password - waiting for MFA")
 
+        self.wait_for_mfa()
+        self.verbose_msg("MFA has been accepted - getting auth token")
 
-
-        signin_button = self.try_get_ele_by_class_name("btn--login")
-        signin_button.click()
-        if self.verbose:
-            print("Just clicked the second sign in button. Will now sleep for {} seconds".format(SLEEP_TIME))
-        time.sleep(SLEEP_TIME)
-
-        self.logged_in = True
-        if self.verbose:
-            print("Ideally we should be authenticated with DSS now. Will now access the ontrack homepage again")
-        self.driver.get("https://ontrack.deakin.edu.au/#/home")
-        if self.verbose:
-            print("Selenium has loaded the ontrack page, but the script often fails here so we will give it {} seconds to fully load".format(SLEEP_TIME*2.5))
-        time.sleep(SLEEP_TIME*2.5)
-
-    # after logging in to ontrack, capture the created auth token so we can access the API
-    def get_auth_token(self):
-        self.login_ontrack()
-
-        cookies = self.driver.get_cookies()
-
-        auth = ''
-        for cookie in cookies:
-            if cookie['domain'] == 'ontrack.deakin.edu.au':
-                auth = cookie['value']
-                break
-
-        if not auth:
-            if self.verbose:
-                print("ERROR: Couldn't find auth token in cookies")
-
-            raise ValueError("Couldn't find the ontrack auth token in the browser cookies")
-
-
-        deakin_id = json.loads(urllib.parse.unquote(auth))
-        auth_token = deakin_id['authenticationToken']
-        if self.verbose:
-            print("We're in business, we've got the auth token. The next part will be much faster")
-
-        self.driver.quit()
+        auth_token = self.wait_for_cookie()
+        self.verbose_msg("Retrieved auth token")
 
         return auth_token
 
+    def login(self, username, password):
+        u_input = self.wait_for_element_presence((By.ID, "username"))
+        p_input = self.wait_for_element_presence((By.ID, "password"))
+        submit_btn = self.wait_for_element_presence((By.CLASS_NAME, "btn--login"))
+
+        u_input.send_keys(username)
+        p_input.send_keys(password)
+        submit_btn.click()
+
+    def wait_for_mfa(self):
+        continue_btn = self.wait_for_element_presence((By.NAME, "_eventId_proceed"), 60, 1)
+        continue_btn.click()
+
+    def wait_for_cookie(self):
+        cookie=None
+        ctr=0
+        while(cookie == None):
+            cookie = self.driver.get_cookie("doubtfire_user")
+            time.sleep(0.5)
+            ctr +=1
+            if ctr == 60:
+                print("Couldn't find cookie after 30 seconds. Please try again")
+                sys.exit()
+
+        cookie_fields = json.loads(urllib.parse.unquote(cookie['value']))
+        auth_token = cookie_fields['authenticationToken']
+        return auth_token
+    
+
+if __name__ == "__main__":
+    sso = SingleSignon('./chromedriver.exe', run_headless=True, verbose=True)
+    token = sso.get_auth_token(os.getenv('USER'), PasswordManager.decrypt(os.getenv('KEY'), os.getenv('PASS')))
+    print(token)
