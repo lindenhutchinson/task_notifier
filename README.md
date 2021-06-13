@@ -1,4 +1,4 @@
-# Track Notifier 
+# Task Notifier 
 
 A python program for alerting you when you have received responses on Ontrack.
 
@@ -33,11 +33,11 @@ To run this program:
     python main.py
 ```
 
-If you just want to test out your Microsoft teams webhook, you can randomly set tasks to unread using
+If you just want to test out your Microsoft teams webhook, you can randomly set tasks to unread in main.py using
 ```
 Ontrack.set_random_tasks_unread()
 ```
-before calling
+before using
 ```
 Ontrack.get_update_msg()
 ```

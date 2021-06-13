@@ -112,7 +112,12 @@ class Ontrack:
         comments = []
         for task in task_info:
             if task['is_new']:
-                comments.append(task['comment'])
+                created_at = datetime.datetime.strptime(task['created_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+
+                comments.append({
+                    'timestamp':created_at.strftime("%d/%m/%y %X"),
+                    'comment': task['comment']
+                    })
 
         return comments
 
@@ -121,10 +126,8 @@ class Ontrack:
             'https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/comments'.format(proj_id, task_def_id))
         id_list = []
         for task in task_info:
-            if task['author']['email'].split('@')[0] == self.username:
-                continue
-            
-            id_list.append(task['id'])
+            if task['author']['email'].split('@')[0] != self.username and task['type'] == 'text':
+                id_list.append(task['id'])
 
         return id_list
 

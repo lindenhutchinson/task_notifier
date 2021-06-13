@@ -10,8 +10,10 @@ def send_teams_msg(webhook_url, msg):
         for task in unit['tasks']:
             task_section = pymsteams.cardsection()
 
-            task_section.title(f"Task: {task['task_name']}")
-            task_section.text("\n\n".join(task['messages']))
+            task_section.title(f"**{task['task_name']}**")
+
+            task_msgs = [f"**{t['timestamp']}** - {t['comment']}" for t in task['messages']]
+            task_section.text("\n\n".join(task_msgs))
             teams_msg.addSection(task_section)
             msg_count += len(task['messages'])
 
