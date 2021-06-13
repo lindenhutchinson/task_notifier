@@ -2,7 +2,7 @@ import requests
 import json
 import datetime
 import urllib.parse
-
+import random
 
 class Ontrack:
     def __init__(self, username, auth_token):
@@ -52,6 +52,7 @@ class Ontrack:
         units = []
         current_period_id = self.get_current_teaching_period()['id']
         for proj in self.make_get_request(url):
+            # If you want to get ontrack data from units of all teaching periods, you can comment the line below
             if proj['teaching_period_id'] == current_period_id:
                 units.append(proj)
 
@@ -80,6 +81,7 @@ class Ontrack:
                 return ("{} : {}".format(task['abbreviation'], task['name']))
 
         return "Couldn't find name..."
+
 
     # get all tasks that have new comments
     def get_updated_tasks(self, proj):
@@ -113,6 +115,37 @@ class Ontrack:
                 comments.append(task['comment'])
 
         return comments
+
+    def get_task_comment_ids(self, proj_id, task_def_id):
+        task_info = self.make_get_request(
+            'https://ontrack.deakin.edu.au/api/projects/{}/task_def_id/{}/comments'.format(proj_id, task_def_id))
+        id_list = []
+        for task in task_info:
+            if task['author']['email'].split('@')[0] == self.username:
+                continue
+            
+            id_list.append(task['id'])
+
+        return id_list
+
+    def set_random_tasks_unread(self, num=1):
+        projects = self.get_projects()
+        messages = []
+        for proj in projects:
+            tasks = self.get_task_definitions(proj['unit_id'])
+            for task in tasks:
+                id_list = self.get_task_comment_ids(proj['project_id'], task['id'])
+                for id in id_list:
+                    messages.append({
+                        'proj_id':proj['project_id'],
+                        'task_id':task['id'],
+                        'msg_id':id
+                    })
+        set_unread = num if num <= len(messages) else len(messages)
+        for i in range(set_unread):
+            msg = random.choice(messages)
+            self.mark_comment_unread(msg['proj_id'], msg['task_id'], msg['msg_id'])
+            messages.remove(msg)
 
     def mark_comment_unread(self, proj_id, task_def_id, comment_id):
         url = f"https://ontrack.deakin.edu.au/api/projects/{proj_id}/task_def_id/{task_def_id}/comments/{comment_id}"

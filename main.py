@@ -21,7 +21,6 @@ def load_auth_token():
     except FileNotFoundError:
         return None
 
-
 def get_token(run_headless=True, verbose=True):
     try:
         sso = SingleSignon('./chromedriver.exe', run_headless, verbose)
@@ -29,30 +28,37 @@ def get_token(run_headless=True, verbose=True):
             os.getenv('KEY'), os.getenv('PASS')))
         save_auth_token(token)
         return token
-    except Exception:
+    except Exception as e:
         print("Error attempting to retrieve auth token")
         print(e)
         sys.exit()
 
 if __name__ == "__main__":
+    # attempts to load the auth token from auth_token.txt
     token = load_auth_token()
+    # if the token isn't found in the file, it uses the SSO module to run the Ontrack login process (this will require the user to authorize using MFA)
     if not token:
         print("Couldn't get auth token from file - running selenium")
         token = get_token()
        
     o = Ontrack(os.getenv('USER'), token)
+    # refresh the token, so if this script is run every 60 minutes, it shouldn't have to repeat the MFA process as the token will stay valid
     token = o.refresh_auth_token()
+    # this also detects if the token input from auth_token.txt is expired. If it is, the SSO login process needs to be done again
     if not token:
         print("Got invalid auth token from file - running selenium")
         token = get_token()
 
+    o = Ontrack(os.getenv('USER'), token)
+
     try:
         print("Accessing Ontrack API")
-        o.mark_comment_unread(28230, 4364, 1262750)
-        o.mark_comment_unread(28230, 4367, 1275962)
-        o.mark_comment_unread(28230, 4772, 1634244)
-        # o.mark_comment_unread(18033, 3424, 797843)
-        # o.mark_comment_unread(18033, 3424, 797844)
+
+        # this will randomly set tasks to an unread state (how nice of the doubtfire developers to include that endpoint)
+        # the program will find the "new" messages and send a ms teams notification
+        o.set_random_tasks_unread(5)
+
+        # find all new comments from the current teaching period's units
         msg = o.get_update_msg()
 
     except Exception as e:

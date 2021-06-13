@@ -1,58 +1,83 @@
 # Track Notifier 
 
-A little script so I can receive emails when my tasks have been updated on ontrack. Ontrack didn't natively have this feature, so I figured out how to access the api and I wrote this program to check for updates and email me if my tutors have marked any of my tasks off or replied to my messages.
-I run this on crontab on a raspberry pi.
+A python program for alerting you when you have received responses on Ontrack.
 
-If you don't want to mess around with selenium and just want to try out the script, you can easily pass in an auth_token from your browser, created after you login.
-You can find this by pressing F12 then going to the network tab. From here you should see some URLs that look like
 
-	https://ontrack.deakin.edu.au/api/projects?auth_token=AUTH TOKEN WILL BE HERE&include_inactive=true
+To run this program:
 
-just paste that value into the Ontrack constructor and you'll skip the entire slow part of the script.
+1. Download the [chromedriver version](https://chromedriver.chromium.org/downloads) appropriate to your chrome version
 
-I recommending calling get_projects() first so you have access to unit_id and proj_id which are required for most of the other functions.
+2. Create a virtual env to run the program in
+```
+    pip install virtualenv
+    virtualenv venv
+    source venv/Scripts/activate
+```
+3. Install requirements.txt
+```
+    pip install -r requirements.txt
+```
+4. Generate a .env file by running generate_env_file.py
+```
+    python generate_env_file.py
+```
+5. Create a Microsoft Teams group and create a channel webhook by following [this tutorial](https://techcommunity.microsoft.com/t5/microsoft-365-pnp-blog/how-to-configure-and-use-incoming-webhooks-in-microsoft-teams/ba-p/2051118)
 
-## Password_Manager
+6. Put the webhook url generated from the previous step into the appropriate location in the .env file
+```
+    WEBHOOK=<Your-Webhook-Url-Here>
+```
 
-There is a password encryption manager I wrote that uses symmetric encryption so there's no need to store passwords in plaintext.
-To use this, you'll first need to run the below function to generate a key and your encrypted password string.
+7. Run main.py to check for new Ontrack messages. If any are found, a message will be sent via the MsTeams webhook
+```
+    python main.py
+```
 
-print_key_and_pass('your-password-here'.encode("utf-8"))
+If you just want to test out your Microsoft teams webhook, you can randomly set tasks to unread using
+```
+Ontrack.set_random_tasks_unread()
+```
+before calling
+```
+Ontrack.get_update_msg()
+```
+to retrieve the newly unread messages
 
-I do this twice for each password (email and deakin) but you could use the same key twice.
 
-I save the key in a local file and the encrypted password is stored either in an environment variable or directly on the document.
-The password_manager class only deals with values in bytes so when you're passing strings directly, use .encode("utf-8") or b'this string is in bytes'
+## single_singon.py
 
-## Main
+This module uses Selenium webdriver to automate the process of SSO login.
 
-If you want to use selenium, you'll probably want to check some of these out:
+SSO uses variables contained in a .env file which are generated using generate_env_file.py
 
-* string driver_path
-* bool run_selenium_headless
-* bool verbose
+This function takes in username and password input.
 
-They do pretty much what's on the box.
+Your password is encrypted using symmetric encryption and the key, username and encrypted password are stored in the .env file
 
-## Single Signon
+Storing a key and password together isn't really that different to storing the password in plaintext for someone who knows even a little. Keep that .env file safe or find a different way to store your password.
 
-It uses selenium to log in to Deakin Single Signon, and retrieves an ontrack authentication token from the cookies in the automated browser.
-This process takes the longest amount of time, because selenium is so slow and prone to skipping over elements that it's looking for.
 
-There are two constants at the top of single_signon.py
+**Running this module will require you to manually authorize the login via MFA**
 
-* SLEEP_TIME
-* SEL_RETRIES
+### You need to ensure your MFA is set to always send a notification. 
+This is important as the script is unable to click the button to send you a notification; it depends on you having checked DUO setting of always sending a notification to your device
 
-There are a number of sleeps in the program to give selenium plenty of time to find what it's looking for.
-Depending on your system, you may need to increase the sleep time.
+After the SSO process have been completed, the auth token generated will be saved to a text file (auth_token.txt)
 
-SEL_RETRIES is the number of times the program will attempt to search for an element on the webpage. 
-This will sleep between every attempt and will exit the program if it doesn't find the element after the set amount of times.
+In subsequent runs of the program, the content from this file will be used rather than having to run the SSO login process again and avoiding unnecessary MFA checks
 
-Upon finding the authentication token in the cookies after your automated login to ontrack, the actual accessing the API is a lot faster.
+Each time the program is run, the token will be refreshed giving you another 60 minutes of token validity.
 
-## Emailer
+If you set it up to run on crontab every 59 minutes, you would only have to do the one MFA and hypothetically, it could use the same auth token forever (until you inevitably have to login to ontrack yourself and forcibly generate a new auth token)
 
-The script uses SMTP to send emails to a designated address.
-If you want to use a gmail account as the sender, you will need to have its access level set to lowest security
+
+## ontrack.py
+
+This module operates the accessing of the ontrack API endpoints.
+
+Using the auth token generated from single_signon.py to authorize the requests, it's possible to comb through the messages of all the tasks from all of your units in the current teaching period, and build up a list of new messages.
+
+A function quite useful for testing this feature is 
+```
+Ontrack.set_random_tasks_unread(5)
+```
