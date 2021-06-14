@@ -5,6 +5,8 @@ A python program for alerting you when you have received responses on Ontrack.
 
 To run this program:
 
+0. Ensure that your DUO Multi-Factor Authentication settings have been set to always send a notification. This is very important as the automated web browser is unable to click the button to send you a notification. If you aren't receiving MFA checks when you think you should be, double check your DUO settings
+
 1. Download the [chromedriver version](https://chromedriver.chromium.org/downloads) appropriate to your chrome version
 
 2. Create a virtual env to run the program in
@@ -57,7 +59,8 @@ Storing a key and password together isn't really that different to storing the p
 
 **Running this module will require you to manually authorize the login via MFA**
 
-### You need to ensure your MFA is set to always send a notification. 
+**You need to ensure your MFA is set to always send a notification.**
+
 This is important as the script is unable to click the button to send you a notification; it depends on you having checked DUO setting of always sending a notification to your device
 
 After the SSO process have been completed, the auth token generated will be saved to a text file (auth_token.txt)
