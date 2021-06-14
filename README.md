@@ -17,31 +17,29 @@ To run this program:
 ```
     pip install -r requirements.txt
 ```
-4. Generate a .env file by running generate_env_file.py
+4. Create a Microsoft Teams group and create a channel webhook by following [this tutorial](https://techcommunity.microsoft.com/t5/microsoft-365-pnp-blog/how-to-configure-and-use-incoming-webhooks-in-microsoft-teams/ba-p/2051118)
+
+5. Change the required values in main.py and run it. This will require you to authorize the login via MFA and will randomly set 3 comments from units in the current teaching period to unread. 
+
+If you currently don't have any ontrack units in the current teaching period but would still like to test out the program, you can set the use_all_units variable to True. This may slow the execution down considerably depending on how many ontrack units you have completed.
+```
+    username = 'your-deakin-username'
+    password = 'your-deakin-password'
+    webhook_url = 'your-webhook-url'
+    use_all_units = False
+```
+
+6. If you would like to setup a more permanent runner of the script, you can generate a .env file by running generate_env_file.py
 ```
     python generate_env_file.py
 ```
-5. Create a Microsoft Teams group and create a channel webhook by following [this tutorial](https://techcommunity.microsoft.com/t5/microsoft-365-pnp-blog/how-to-configure-and-use-incoming-webhooks-in-microsoft-teams/ba-p/2051118)
 
-6. Put the webhook url generated from the previous step into the appropriate location in the .env file
+6. Put your webhook url into the correct location in the .env file
 ```
     WEBHOOK=<Your-Webhook-Url-Here>
 ```
 
-7. Run main.py to check for new Ontrack messages. If any are found, a message will be sent via the MsTeams webhook
-```
-    python main.py
-```
-
-If you just want to test out your Microsoft teams webhook, you can randomly set tasks to unread in main.py using
-```
-Ontrack.set_random_tasks_unread()
-```
-before using
-```
-Ontrack.get_update_msg()
-```
-to retrieve the newly unread messages
+7. After setting up the .env file, you can run find_ontrack_updates. You could be set this up to run on a crontab every 45 minutes or so and it will keep the authentication token refreshed so that you will (ideally) only need to do the one MFA check.
 
 
 ## single_singon.py
@@ -76,8 +74,3 @@ If you set it up to run on crontab every 59 minutes, you would only have to do t
 This module operates the accessing of the ontrack API endpoints.
 
 Using the auth token generated from single_signon.py to authorize the requests, it's possible to comb through the messages of all the tasks from all of your units in the current teaching period, and build up a list of new messages.
-
-A function quite useful for testing this feature is 
-```
-Ontrack.set_random_tasks_unread(5)
-```

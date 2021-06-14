@@ -5,6 +5,7 @@ cryptography==3.4.7
 idna==2.10
 pycparser==2.20
 pymsteams==0.1.15
+python-dotenv==0.17.1
 requests==2.25.1
 selenium==3.141.0
 urllib3==1.26.5

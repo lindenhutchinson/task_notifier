@@ -5,9 +5,10 @@ import urllib.parse
 import random
 
 class Ontrack:
-    def __init__(self, username, auth_token):
+    def __init__(self, username, auth_token, find_all_units=False):
         self.username = username
         self.auth_token = auth_token
+        self.find_all_units = find_all_units
 
     def make_post_request(self, url, data):
         session = requests.Session()
@@ -52,9 +53,12 @@ class Ontrack:
         units = []
         current_period_id = self.get_current_teaching_period()['id']
         for proj in self.make_get_request(url):
-            # If you want to get ontrack data from units of all teaching periods, you can comment the line below
-            if proj['teaching_period_id'] == current_period_id:
+            # for if you want to search through all units for new messages (for testing while not having any active ontrack units)
+            if self.find_all_units:
                 units.append(proj)
+            else:
+                if proj['teaching_period_id'] == current_period_id:
+                    units.append(proj)
 
         return units
 

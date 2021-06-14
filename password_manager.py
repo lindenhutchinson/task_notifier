@@ -19,7 +19,7 @@ class PasswordManager:
 
     @staticmethod
     def ensure_as_bytes(content):
-        return content.encode("utf-8")
+        return content.encode("utf-8") if content else ''
 
     @staticmethod
     def ensure_as_str(content):
