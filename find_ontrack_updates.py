@@ -1,5 +1,5 @@
 from password_manager import PasswordManager
-from ontrack import Ontrack
+from ontrack_ctrl import OntrackCtrl
 from single_signon import SingleSignon
 from ms_teams import send_teams_msg
 import os
@@ -29,8 +29,7 @@ def get_token(run_headless=True, verbose=True):
         return token
     except Exception as e:
         print("Error attempting to retrieve auth token")
-        print(e)
-        sys.exit()
+        raise e
 
 
 if __name__ == "__main__":
@@ -50,7 +49,7 @@ if __name__ == "__main__":
         print("Couldn't get auth token from file - running selenium")
         token = get_token()
 
-    o = Ontrack(os.getenv('USER'), token)
+    o = OntrackCtrl(os.getenv('USER'), token)
     # refresh the token, so if this script is run every 60 minutes, it shouldn't have to repeat the MFA process as the token will stay valid
     token = o.refresh_auth_token()
     # this also detects if the token input from auth_token.txt is expired. If it is, the SSO login process needs to be done again
@@ -58,22 +57,20 @@ if __name__ == "__main__":
         print("Got invalid auth token from file - running selenium")
         token = get_token()
 
-    o = Ontrack(os.getenv('USER'), token)
+    o = OntrackCtrl(os.getenv('USER'), token)
 
     try:
         print("Accessing Ontrack API")
         # set 3 random comments to be unread to ensure we receieve a ms teams message
         o.set_random_tasks_unread(3)
-        msg = o.get_update_msg()
+        msg = o.get_updates_msg()
     except Exception as e:
         print("Error accessing ontrack API")
-        print(e)
-        sys.exit()
+        raise e
 
     try:
         send_teams_msg(os.getenv('WEBHOOK'), msg)
         print("Sent a teams message")
     except Exception as e:
         print("Error accessing MS Teams webhook")
-        print(e)
-        sys.exit()
+        raise e

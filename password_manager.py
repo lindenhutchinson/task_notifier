@@ -24,7 +24,3 @@ class PasswordManager:
     @staticmethod
     def ensure_as_str(content):
         return str(content).strip("b' '")
-
-# if __name__ == "__main__":
-
-
