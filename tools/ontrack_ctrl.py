@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 import urllib.parse
 import random
-from ontrack_api import OntrackAPI
+from .ontrack_api import OntrackAPI
 
 
 class RequestsManager:

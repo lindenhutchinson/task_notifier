@@ -8,7 +8,7 @@ import sys
 import urllib
 import json
 from dotenv import load_dotenv
-from password_manager import PasswordManager
+from .password_manager import PasswordManager
 import os
 
 SECONDS_WAIT_FOR_MFA = 60

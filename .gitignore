@@ -7,4 +7,3 @@ logs/
 bash.exe.stackdump
 auth_token.txt
 venv/
-logs/

@@ -1,4 +1,4 @@
-from password_manager import PasswordManager
+from tools.password_manager import PasswordManager
 import os
 
 if __name__ == "__main__":
