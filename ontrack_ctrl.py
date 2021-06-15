@@ -1,6 +1,6 @@
 import requests
 import json
-import datetime
+from datetime import datetime
 import urllib.parse
 import random
 from ontrack_api import OntrackAPI
@@ -37,12 +37,12 @@ class OntrackCtrl:
 
     def get_current_teaching_period(self):
         teaching_periods = self.requests.get(OntrackAPI.get_teaching_periods())
-        now = datetime.datetime.now()
+        now = datetime.now()
         current = 0
         for period in teaching_periods:
-            start = datetime.datetime.strptime(
+            start = datetime.strptime(
                 period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            end = datetime.datetime.strptime(
+            end = datetime.strptime(
                 period['end_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
             if now > start and now < end:
                 current = period
@@ -53,8 +53,9 @@ class OntrackCtrl:
         current_period_id = self.get_current_teaching_period()['id']
         active_units = []
         projects = self.requests.get(OntrackAPI.get_projects())
+        # projects have an "active" attribute, but that relates to whether or not they are currently being run
+        # it is not related to the current student taking that unit
         for proj in projects:
-            # if you want to search through all units for new messages (for testing while not having any active ontrack units)
             if self.use_all_units:
                 active_units.append(proj)
             else:
@@ -88,8 +89,10 @@ class OntrackCtrl:
             if task['num_new_comments'] > 0:
                 comments = self.get_new_task_comments(
                     proj['project_id'], task['task_definition_id'])
+
                 name = self.get_task_name(
                     task_defs, task['task_definition_id'])
+                    
                 updates.update({name: comments})
 
         return updates
@@ -107,11 +110,11 @@ class OntrackCtrl:
         comments = []
         for comment in task_comments:
             if comment['is_new']:
-                created_at = datetime.datetime.strptime(
+                created_at = datetime.strptime(
                     comment['created_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
                 comments.append({
-                    'timestamp': created_at.strftime("%d/%m/%y %X"),
+                    'timestamp': created_at.strftime("%d/%m/%y %I:%M%p"),
                     'comment': comment['comment']
                 })
 

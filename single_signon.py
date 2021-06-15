@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 from password_manager import PasswordManager
 import os
 
+SECONDS_WAIT_FOR_MFA = 60
+SECONDS_WAIT_FOR_ELEMENT = 30
+SECONDS_WAIT_FOR_COOKIE = 60
 
 class SingleSignon:
     def __init__(self, selenium_dir, verbose=False, run_headless=True):
@@ -35,12 +38,11 @@ class SingleSignon:
         return driver
 
 
-    def wait_for_element_presence(self, identifier, wait_time=10, frequency=0.5):
+    def wait_for_element_presence(self, identifier, wait_time=SECONDS_WAIT_FOR_ELEMENT, frequency=0.5):
         try:
             element = WebDriverWait(self.driver, wait_time, frequency).until(EC.presence_of_element_located(identifier))
         except TimeoutException:
-            print("Timed out waiting for element. Please try again")
-            sys.exit()
+            raise Exception("timed out waiting for element")
         
         return element
 
@@ -73,7 +75,7 @@ class SingleSignon:
         submit_btn.click()
 
     def wait_for_mfa(self):
-        continue_btn = self.wait_for_element_presence((By.NAME, "_eventId_proceed"), 60, 1)
+        continue_btn = self.wait_for_element_presence((By.NAME, "_eventId_proceed"), SECONDS_WAIT_FOR_MFA, 1)
         continue_btn.click()
 
     def wait_for_cookie(self):
@@ -81,11 +83,11 @@ class SingleSignon:
         ctr=0
         while(cookie == None):
             cookie = self.driver.get_cookie("doubtfire_user")
-            time.sleep(0.5)
+            time.sleep(1)
             ctr +=1
-            if ctr == 60:
-                print("Couldn't find cookie after 30 seconds. Please try again")
-                sys.exit()
+            if ctr == SECONDS_WAIT_FOR_COOKIE:
+                self.verbose_msg("Couldn't find cookie after 30 seconds. Please try again")
+                raise Exception("couldnt find SSO cookie")
 
         cookie_fields = json.loads(urllib.parse.unquote(cookie['value']))
         auth_token = cookie_fields['authenticationToken']

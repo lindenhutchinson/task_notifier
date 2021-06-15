@@ -17,5 +17,5 @@ def send_teams_msg(webhook_url, msg):
             teams_msg.addSection(task_section)
             msg_count += len(task['messages'])
 
-        teams_msg.text(f"{msg_count} new messages")
+        teams_msg.text(f"{msg_count} new message{'s' if msg_count != 1 else ''}")
         teams_msg.send()
