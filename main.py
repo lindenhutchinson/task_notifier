@@ -5,7 +5,7 @@ from ms_teams import send_teams_msg
 import os
 
 def test_ontrack_notifier(username, password, webhook_url, use_all_units):
-    sso = SingleSignon('./chromedriver.exe', run_headless=True, verbose=True)
+    sso = SingleSignon('./chromedriver.exe')
     token = sso.get_auth_token(username, password)
     print(f"Accessing ontrack")
     ontrack = OntrackCtrl(username, token, use_all_units)

@@ -37,17 +37,15 @@ class OntrackCtrl:
 
     def get_current_teaching_period(self):
         teaching_periods = self.requests.get(OntrackAPI.get_teaching_periods())
-        now = datetime.now()
-        current = 0
-        for period in teaching_periods:
-            start = datetime.strptime(
-                period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            end = datetime.strptime(
-                period['end_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if now > start and now < end:
-                current = period
 
-        return current
+        now = datetime.now()
+
+        for period in teaching_periods[::-1]: #reverse the array to speed up the search as the current period is most likely towards the end
+            start = datetime.strptime(period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            end = datetime.strptime(period['end_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            if now > start and now < end:
+                return period
+
 
     def get_projects(self):
         current_period_id = self.get_current_teaching_period()['id']

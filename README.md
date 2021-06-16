@@ -31,13 +31,25 @@ pip install -r requirements.txt
 ```
 username = 'your-deakin-username'
 webhook_url = 'your-webhook-url'
-
 password = input("Enter your deakin password: ")
 use_all_units = False
 ```
-6. Running main.py will require you to authorize the login via MFA and will randomly set some comments to be unread to ensure there's some notifications to be sent
 
->If you currently don't have any ontrack units in the current teaching period but would still like to test out the program, you can set use_all_units to true.
+6. Running main.py will require you to authorize the login via MFA. It will randomly set some comments to be unread to ensure there's some notifications to be sent
+>If you don't have any ontrack units in the current teaching period but would still like to test out the program, you should set **use_all_units** to true.
+```
+sso = SingleSignon('./chromedriver.exe')
+
+token = sso.get_auth_token(username, password) # requires MFA
+
+ontrack = OntrackCtrl(username, token, use_all_units)
+
+ontrack.set_random_tasks_unread(3) 
+
+msg = ontrack.get_updates_msg()
+
+send_teams_msg(webhook_url, msg)
+```
 
 
 ## Crontab
@@ -50,4 +62,4 @@ use_all_units = False
 WEBHOOK=<Your-Webhook-Url-Here>
 ```
 
-1. Now you can run **find_ontrack_updates.py**. This does the same thing as main.py and will require you to authorize via MFA the first time you run it. After the first run, your auth token is saved to a file and subsequent runs attempt to use that token rather than having to re-authorize with MFA. A log directory will also be created after the first run
+3. Now you can run **find_ontrack_updates.py**. This is similar to main.py but has error handling and logging (ideal for running on crontab). It will still require you to authorize via MFA the first time you run it. After the first run, your auth token is saved to a file and subsequent runs attempt to use that token rather than having to re-authorize with MFA.

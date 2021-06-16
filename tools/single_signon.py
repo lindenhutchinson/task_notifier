@@ -16,7 +16,7 @@ SECONDS_WAIT_FOR_ELEMENT = 30
 SECONDS_WAIT_FOR_COOKIE = 60
 
 class SingleSignon:
-    def __init__(self, selenium_dir, verbose=False, run_headless=True):
+    def __init__(self, selenium_dir, verbose=True, run_headless=True):
         self.run_headless = run_headless
         self.verbose = verbose
         self.driver = self.make_web_driver(selenium_dir)
