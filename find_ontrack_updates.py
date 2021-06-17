@@ -8,14 +8,13 @@ from tools.utils import ensure_directory_exists, load_from_file, write_to_file
 import os
 import sys
 from dotenv import load_dotenv
-from datetime import datetime
 
 load_dotenv()
 AUTH_TOKEN_FILE = "auth_token.txt"
 LOGGING_DIRECTORY = "./logs"
 
 ensure_directory_exists(LOGGING_DIRECTORY)
-logger = Logger(datetime.strftime(datetime.now(), "%d_%m_%y"), LOGGING_DIRECTORY)
+logger = Logger(LOGGING_DIRECTORY)
 
 
 

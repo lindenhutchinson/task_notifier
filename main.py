@@ -1,7 +1,7 @@
 
-from ontrack_ctrl import OntrackCtrl
-from single_signon import SingleSignon
-from ms_teams import send_teams_msg
+from tools.ontrack_ctrl import OntrackCtrl
+from tools.single_signon import SingleSignon
+from tools.ms_teams import send_teams_msg
 import os
 
 def test_ontrack_notifier(username, password, webhook_url, use_all_units):

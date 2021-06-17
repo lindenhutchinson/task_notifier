@@ -1,8 +1,8 @@
 from datetime import datetime
 
 class Logger:
-    def __init__(self, todays_date, log_dir):
-        self.filename = f"{log_dir}/log_{todays_date}.txt"
+    def __init__(self, log_dir):
+        self.filename = f"{log_dir}/log_{datetime.strftime(datetime.now(), '%d_%m_%y')}.txt"
 
     def write_to_file(self, content):
         with open(self.filename, "a+") as fn:
