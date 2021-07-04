@@ -7,10 +7,9 @@ def ensure_directory_exists(dir):
     except OSError as e:
         return dir
 
-def write_to_file(content, filename):
-    with open(filename, "w") as fn:
+def write_to_file(content, filename, write_mode="w"):
+    with open(filename, write_mode) as fn:
         fn.write(content)
-
 
 def load_from_file(filename):
     try:

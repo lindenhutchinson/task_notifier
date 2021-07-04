@@ -17,7 +17,6 @@ ensure_directory_exists(LOGGING_DIRECTORY)
 logger = Logger(LOGGING_DIRECTORY)
 
 
-
 def get_auth_token(run_headless=True, verbose=True):
     try:
         sso = SingleSignon('./chromedriver.exe', run_headless, verbose)
@@ -27,21 +26,10 @@ def get_auth_token(run_headless=True, verbose=True):
         return token
     except Exception as e:
         logger.error(f"retrieving token using selenium - {e}")
-        print("Error attempting to retrieve auth token")
+        print(f"Error attempting to retrieve auth token - {e}")
         sys.exit()
 
-
-if __name__ == "__main__":
-    if not os.getenv('KEY'):
-        logger.error("couldnt get values from env file")
-        print("Run generate_env_file.py to create a .env file")
-        sys.exit()
-
-    if os.getenv('WEBHOOK') == '<Your-Webhook-Url-Here>':
-        logger.error("no webhook url set")
-        print("Edit WEBHOOK in the .env file - Put in your own webhook url")
-        sys.exit()
-
+def load_token():
     token = load_from_file(AUTH_TOKEN_FILE)
     # if the token isn't found in the file, it uses the SSO module to run the Ontrack login process (this will require the user to authorize using MFA)
     if not token:
@@ -60,7 +48,21 @@ if __name__ == "__main__":
     else:
         logger.success("refreshed authentication token")
 
-    o = OntrackCtrl(os.getenv('USER'), token)
+    return token
+
+
+if __name__ == "__main__":
+    if not os.getenv('KEY'):
+        logger.error("couldnt get values from env file")
+        print("Run generate_env_file.py to create a .env file")
+        sys.exit()
+
+    if os.getenv('WEBHOOK') == '<Your-Webhook-Url-Here>':
+        logger.error("no webhook url set")
+        print("Edit WEBHOOK in the .env file - Put in your own webhook url")
+        sys.exit()
+
+    o = OntrackCtrl(os.getenv('USER'), load_token())
 
     try:
         print("Accessing Ontrack API")
@@ -71,8 +73,6 @@ if __name__ == "__main__":
         logger.error(f"accessing ontrack {e}")
         print(f"Error accessing ontrack API {e}")
         sys.exit()
-
-
 
     try:
         send_teams_msg(os.getenv('WEBHOOK'), msg)

@@ -31,3 +31,6 @@ class OntrackAPI:
     def refresh_auth_token(auth_token):
         return f"https://ontrack.deakin.edu.au/api/auth/{auth_token}"
 
+    @staticmethod
+    def get_task_pdf(unit_id, task_def_id):
+        return f"https://ontrack.deakin.edu.au/api/units/{unit_id}/task_definitions/{task_def_id}/task_pdf.json"

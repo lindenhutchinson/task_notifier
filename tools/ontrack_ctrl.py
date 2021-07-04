@@ -16,6 +16,11 @@ class RequestsManager:
         resp.close()
         return json.loads(resp.text)
 
+    def get_content(self, url, params={}):
+        params.update({'auth_token': self.auth_token})
+        resp = requests.get(url, params=params, stream=True)
+        return resp.content
+
     def post(self, url, data=[], params={}):
         params.update({'auth_token': self.auth_token})
         resp = requests.post(url, params=params, data=data)
@@ -37,30 +42,31 @@ class OntrackCtrl:
 
     def get_current_teaching_period(self):
         teaching_periods = self.requests.get(OntrackAPI.get_teaching_periods())
-
         now = datetime.now()
 
-        for period in teaching_periods[::-1]: #reverse the array to speed up the search as the current period is most likely towards the end
-            start = datetime.strptime(period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            end = datetime.strptime(period['end_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if now > start and now < end:
-                return period
+        # reverse the array to speed up the search as the current period is most likely towards the end
+        for period in teaching_periods[::-1]:
+            start = datetime.strptime(
+                period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            end = datetime.strptime(
+                period['end_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
+            # sorry DeakinCollege ;_;
+            if now > start and now < end and 'DeakinCollege' not in period['period']:
+                return period['id']
+
+        raise Exception('Couldn't find current teaching period (has the trimester started yet?)')
 
     def get_projects(self):
-        current_period_id = self.get_current_teaching_period()['id']
-        active_units = []
         projects = self.requests.get(OntrackAPI.get_projects())
+
+        if self.use_all_units:
+            return projects
+
+        current_period_id = self.get_current_teaching_period()
         # projects have an "active" attribute, but that relates to whether or not they are currently being run
         # it is not related to the current student taking that unit
-        for proj in projects:
-            if self.use_all_units:
-                active_units.append(proj)
-            else:
-                if proj['teaching_period_id'] == current_period_id:
-                    active_units.append(proj)
-
-        return active_units
+        return list(filter(lambda p: p['teaching_period_id'] == current_period_id, projects))
 
     # get all released tasks for a unit
     def get_project_tasks(self, proj_id):
@@ -90,7 +96,7 @@ class OntrackCtrl:
 
                 name = self.get_task_name(
                     task_defs, task['task_definition_id'])
-                    
+
                 updates.update({name: comments})
 
         return updates
@@ -187,3 +193,26 @@ class OntrackCtrl:
 
         self.auth_token = resp['auth_token']
         return resp['auth_token']
+
+    def get_unit_tasks_pdf(self):
+        if self.use_all_units:
+            raise Exception(
+                "You probably don't want to download ALL of the task PDF files from ALL your former units, right? (set use_all_units to False)")
+
+        projects = self.get_projects()
+        tasks = {}
+        for proj in projects:
+            unit_code = proj['unit_code']
+            tasks.update({unit_code: []})
+            task_defs = self.get_task_definitions(proj['unit_id'])
+            for task in task_defs:
+                if not task['is_graded']:
+                    resp = self.requests.get_content(
+                        OntrackAPI().get_task_pdf(proj['unit_id'], task['id']))
+
+                    tasks[unit_code].append({
+                        'name': f"{task['abbreviation']}",
+                        'content': resp
+                    })
+
+        return tasks
