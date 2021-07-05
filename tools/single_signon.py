@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
@@ -41,7 +41,7 @@ class SingleSignon:
         try:
             element = WebDriverWait(self.driver, wait_time, frequency).until(EC.presence_of_element_located(identifier))
         except TimeoutException:
-            raise Exception("timed out waiting for element")
+            raise Exception(f"timed out waiting for {identifier}")
         
         return element
 
@@ -61,7 +61,7 @@ class SingleSignon:
 
         auth_token = self.wait_for_cookie()
         self.verbose_msg("Retrieved auth token")
-
+        self.driver.close()
         return auth_token
 
     def login(self, username, password):
@@ -74,6 +74,18 @@ class SingleSignon:
         submit_btn.click()
 
     def wait_for_mfa(self):
+        # quickly check if the username/password has failed 
+        # rather than have to wait for the next element search to timeout
+        bad_creds = False
+        try:
+            self.driver.find_element_by_class_name("error")
+            bad_creds = True
+        except NoSuchElementException:
+            bad_creds = False
+
+        if bad_creds:
+            raise Exception("Username or password is incorrect")
+
         continue_btn = self.wait_for_element_presence((By.NAME, "_eventId_proceed"), SECONDS_WAIT_FOR_MFA, 1)
         continue_btn.click()
 
@@ -85,7 +97,7 @@ class SingleSignon:
             time.sleep(1)
             ctr +=1
             if ctr == SECONDS_WAIT_FOR_COOKIE:
-                self.verbose_msg("Couldn't find cookie after 30 seconds. Please try again")
+                self.verbose_msg(f"Couldn't find cookie after {SECONDS_WAIT_FOR_COOKIE} seconds. Please try again")
                 raise Exception("couldnt find SSO cookie")
 
         cookie_fields = json.loads(urllib.parse.unquote(cookie['value']))

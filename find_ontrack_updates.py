@@ -74,18 +74,17 @@ if __name__ == "__main__":
         # set some random comments to be unread to ensure we receieve a ms teams message
         o.set_random_tasks_unread(3)
         msg = o.get_updates_msg()
-    except Exception as e:
-        logger.error(f"accessing ontrack {e}")
-        print(f"Error accessing ontrack API {e}")
-        sys.exit()
+        if msg:
+            send_teams_msg(os.getenv('WEBHOOK'), msg)
+            logger.success("sent ms teams message")
+            print("Sent a teams message")
+        else:
+            logger.log("no updates")
+            print("no updates")
 
-    try:
-        send_teams_msg(os.getenv('WEBHOOK'), msg)
-        logger.success("sent ms teams message")
-        print("Sent a teams message")
     except Exception as e:
-        logger.error(f"sending ms teams message {e}")
-        print("Error accessing MS Teams webhook")
+        logger.error(f"accessing ontrack api {e}")
+        print("Error accessing ontrack API")
         sys.exit()
 
 

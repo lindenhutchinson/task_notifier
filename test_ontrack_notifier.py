@@ -6,7 +6,7 @@ import os
 from tools.utils import ensure_directory_exists, write_to_file
 
 def test_ontrack_notifier(username, password, webhook_url, use_all_units):
-    sso = SingleSignon('./chromedriver.exe')
+    sso = SingleSignon('./chromedriver.exe', headless=True)
     token = sso.get_auth_token(username, password)
     print(f"Accessing ontrack")
     ontrack = OntrackCtrl(username, token, use_all_units)
