@@ -3,7 +3,7 @@ from tools.ontrack_ctrl import OntrackCtrl
 from tools.single_signon import SingleSignon
 from tools.ms_teams import send_teams_msg
 from tools.logger import Logger
-from tools.utils import ensure_directory_exists, load_from_file, write_to_file
+from tools.utils import ensure_directory_exists, load_from_file, write_to_file, refresh_auth_token
 
 import os
 import sys
@@ -37,10 +37,11 @@ def load_token():
         print("Couldn't get auth token from file - running selenium")
         token = get_auth_token()
 
-    o = OntrackCtrl(os.getenv('USER'), token)
-    # refresh the token, so if this script is run every 60 minutes, it shouldn't have to repeat the MFA process as the token will stay valid
-    token = o.refresh_auth_token()
-    # this also detects if the token input from auth_token.txt is expired. If it is, the SSO login process needs to be done again
+
+    # detects if the token input from auth_token.txt is expired.
+    # If it is, the SSO login process needs to be done again
+    token = refresh_auth_token(os.getenv('USER'), token)
+
     if not token:
         logger.log("auth token from file is expired")
         print("Got invalid auth token from file - running selenium")
@@ -62,10 +63,14 @@ if __name__ == "__main__":
         print("Edit WEBHOOK in the .env file - Put in your own webhook url")
         sys.exit()
 
-    o = OntrackCtrl(os.getenv('USER'), load_token())
 
     try:
+        # attempt to retrieve a saved token from a local text file
+        # if that fails, use Selenium to automate the process of Deakin single-signon
+        # this will require a MFA check
+        token = load_token()
         print("Accessing Ontrack API")
+        o = OntrackCtrl(os.getenv('USER'), token, use_all_units = False)
         # set some random comments to be unread to ensure we receieve a ms teams message
         o.set_random_tasks_unread(3)
         msg = o.get_updates_msg()

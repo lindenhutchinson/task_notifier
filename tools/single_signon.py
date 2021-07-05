@@ -16,15 +16,14 @@ SECONDS_WAIT_FOR_ELEMENT = 30
 SECONDS_WAIT_FOR_COOKIE = 60
 
 class SingleSignon:
-    def __init__(self, selenium_dir, verbose=True, run_headless=True):
-        self.run_headless = run_headless
+    def __init__(self, selenium_dir, verbose=True, headless=True):
         self.verbose = verbose
-        self.driver = self.make_web_driver(selenium_dir)
+        self.driver = self.make_web_driver(selenium_dir, headless)
 
     # create selenium driver to access ontrack webpage
-    def make_web_driver(self, selenium_dir):
+    def make_web_driver(self, selenium_dir, headless):
         chrome_options = webdriver.ChromeOptions()
-        if self.run_headless:
+        if headless:
             chrome_options.add_argument('--headless')
             
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])

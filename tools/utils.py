@@ -1,4 +1,7 @@
 import os
+from .ontrack_api import OntrackAPI
+import json
+import requests
 
 def ensure_directory_exists(dir):
     try:
@@ -17,3 +20,12 @@ def load_from_file(filename):
             return fn.read()
     except FileNotFoundError:
         return None
+
+def refresh_auth_token(username, token):
+    resp = requests.put(OntrackAPI.refresh_token(token), params={'username': username, 'remember': True})
+    data = json.loads(resp.text)
+
+    if 'error' in data.keys():
+        return False
+
+    return data['auth_token']

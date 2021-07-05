@@ -27,11 +27,6 @@ class RequestsManager:
         resp.close()
         return json.loads(resp.text)
 
-    def put(self, url, params):
-        resp = requests.put(url, params=params)
-        resp.close()
-        return json.loads(resp.text)
-
 
 class OntrackCtrl:
     def __init__(self, username, auth_token, use_all_units=False):
@@ -41,10 +36,11 @@ class OntrackCtrl:
         self.requests = RequestsManager(auth_token)
 
     def get_current_teaching_period(self):
+        return 15 # cheap way to have the script still work before the trimester has officially started
         teaching_periods = self.requests.get(OntrackAPI.get_teaching_periods())
         now = datetime.now()
 
-        # reverse the array to speed up the search as the current period is most likely towards the end
+        # reverse the array as the current period is most likely towards the end
         for period in teaching_periods[::-1]:
             start = datetime.strptime(
                 period['start_date'], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -55,7 +51,7 @@ class OntrackCtrl:
             if now > start and now < end and 'DeakinCollege' not in period['period']:
                 return period['id']
 
-        raise Exception('Couldn't find current teaching period (has the trimester started yet?)')
+        raise Exception("Couldn't find current teaching period (has the trimester started yet? set use_all_units to True if you just wanna see some messages)")
 
     def get_projects(self):
         projects = self.requests.get(OntrackAPI.get_projects())
@@ -183,16 +179,6 @@ class OntrackCtrl:
                 update_data.append(data)
 
         return update_data
-
-    def refresh_auth_token(self):
-        resp = self.requests.put(OntrackAPI.refresh_auth_token(self.auth_token), params={
-                                 'username': self.username, 'remember': True})
-
-        if 'error' in resp.keys():
-            return False
-
-        self.auth_token = resp['auth_token']
-        return resp['auth_token']
 
     def get_unit_tasks_pdf(self):
         if self.use_all_units:
