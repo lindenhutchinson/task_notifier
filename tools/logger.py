@@ -2,7 +2,7 @@ from datetime import datetime
 
 class Logger:
     def __init__(self, log_dir):
-        self.filename = f"{log_dir}/log_{datetime.strftime(datetime.now(), '%d_%m_%y')}.txt"
+        self.filename = f"{log_dir}/{datetime.strftime(datetime.now(), '%Y_%m_%d')}.txt"
 
     def write_to_file(self, content):
         with open(self.filename, "a+") as fn:

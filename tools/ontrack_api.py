@@ -30,8 +30,8 @@ class OntrackAPI:
         return API_URL + f'/projects/{project_id}/task_def_id/{task_def_id}/comments/{comment_id}'
 
     @staticmethod
-    def refresh_token(auth_token):
-        return API_URL + f'/auth/{auth_token}'
+    def refresh_token():
+        return API_URL + f'/auth'
 
     @staticmethod
     def get_task_pdf(unit_id, task_def_id):

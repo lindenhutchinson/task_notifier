@@ -51,17 +51,23 @@ class SingleSignon:
 
     def get_auth_token(self, username, password):
         self.driver.get('https://ontrack.deakin.edu.au/#/home')
+
         self.verbose_msg("Loading SSO login page")
 
         self.login(username, password)
+
         self.verbose_msg("Submitted username and password - waiting for MFA")
 
         self.wait_for_mfa()
+
         self.verbose_msg("MFA has been accepted - getting auth token")
 
         auth_token = self.wait_for_cookie()
+
         self.verbose_msg("Retrieved auth token")
+
         self.driver.close()
+
         return auth_token
 
     def login(self, username, password):

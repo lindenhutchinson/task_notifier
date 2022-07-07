@@ -22,10 +22,10 @@ def load_from_file(filename):
         return None
 
 def refresh_auth_token(username, token):
-    resp = requests.put(OntrackAPI.refresh_token(token), params={'username': username, 'remember': True})
-    data = json.loads(resp.text)
-
-    if 'error' in data.keys():
+    resp = requests.put(OntrackAPI.refresh_token(), headers={'Auth-Token': token,'Username':username})
+    if 'error' in resp:
         return False
+
+    data = json.loads(resp.text)
 
     return data['auth_token']

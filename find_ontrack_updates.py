@@ -71,9 +71,13 @@ if __name__ == "__main__":
         token = load_token()
         print("Accessing Ontrack API")
         o = OntrackCtrl(os.getenv('USER'), token, use_all_units = False)
+
         # set some random comments to be unread to ensure we receieve a ms teams message
-        o.set_random_tasks_unread(3)
+        # setting comments to unread seems to be broken in ontrack atm...
+        # o.set_random_tasks_unread(1)
+
         msg = o.get_updates_msg()
+
         if msg:
             send_teams_msg(os.getenv('WEBHOOK'), msg)
             logger.success("sent ms teams message")

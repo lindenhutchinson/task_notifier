@@ -7,23 +7,28 @@ from .ontrack_api import OntrackAPI
 
 
 class RequestsManager:
-    def __init__(self, auth_token):
-        self.auth_token = auth_token
+    def __init__(self, auth_token, username):
+        self.headers = {'Auth_Token': auth_token, 'Username': username}
 
     def get(self, url, params={}):
-        params.update({'auth_token': self.auth_token})
-        resp = requests.get(url, params=params)
+        resp = requests.get(url, params=params, headers=self.headers)
         resp.close()
         return json.loads(resp.text)
 
     def get_content(self, url, params={}):
-        params.update({'auth_token': self.auth_token})
-        resp = requests.get(url, params=params, stream=True)
+        resp = requests.get(url, params=params, stream=True, headers=self.headers)
         return resp.content
 
     def post(self, url, data=[], params={}):
-        params.update({'auth_token': self.auth_token})
-        resp = requests.post(url, params=params, data=data)
+        if not params:
+            params = self.headers
+        resp = requests.post(url, params=params, data=data, headers=self.headers)
+        resp.close()
+
+        return json.loads(resp.text)
+
+    def put(self, url, data=[], params={}):
+        resp = requests.put(url, params=params, data=data, headers=self.headers)
         resp.close()
         return json.loads(resp.text)
 
@@ -33,10 +38,10 @@ class OntrackCtrl:
         self.username = username
         self.auth_token = auth_token
         self.use_all_units = use_all_units
-        self.requests = RequestsManager(auth_token)
+        self.requests = RequestsManager(auth_token, username)
 
     def get_current_teaching_period(self):
-        return 15 # cheap way to have the script still work before the trimester has officially started
+        return 18 # Tri 2 2022
         teaching_periods = self.requests.get(OntrackAPI.get_teaching_periods())
         now = datetime.now()
 
@@ -51,7 +56,8 @@ class OntrackCtrl:
             if now > start and now < end and 'DeakinCollege' not in period['period']:
                 return period['id']
 
-        raise Exception("Couldn't find current teaching period (has the trimester started yet? set use_all_units to True if you just wanna see some messages)")
+        raise Exception(
+            "Couldn't find current teaching period (has the trimester started yet? set use_all_units to True if you just wanna see some messages)")
 
     def get_projects(self):
         projects = self.requests.get(OntrackAPI.get_projects())
@@ -151,8 +157,7 @@ class OntrackCtrl:
         for i in range(set_unread):
             msg = random.choice(messages)
 
-            self.requests.post(OntrackAPI.set_comment_to_unread(
-                msg['proj_id'], msg['task_id'], msg['msg_id']))
+            resp = self.requests.post(OntrackAPI.set_comment_to_unread(msg['proj_id'], msg['task_id'], msg['msg_id']))
 
             messages.remove(msg)
 
@@ -181,24 +186,31 @@ class OntrackCtrl:
         return update_data
 
     def get_unit_tasks_pdf(self):
-        if self.use_all_units:
-            raise Exception(
-                "You probably don't want to download ALL of the task PDF files from ALL your former units, right? (set use_all_units to False)")
+        # if self.use_all_units:
+        #     raise Exception(
+        #         "You probably don't want to download ALL of the task PDF files from ALL your former units, right? (set use_all_units to False)")
 
         projects = self.get_projects()
         tasks = {}
         for proj in projects:
             unit_code = proj['unit_code']
+
+            if len(proj['unit_code'].split('/')) > 1:
+                unit_code = proj['unit_code'].split('/')[0]
+
+ 
             tasks.update({unit_code: []})
             task_defs = self.get_task_definitions(proj['unit_id'])
             for task in task_defs:
-                if not task['is_graded']:
-                    resp = self.requests.get_content(
-                        OntrackAPI().get_task_pdf(proj['unit_id'], task['id']))
+                resp = self.requests.get_content(
+                    OntrackAPI().get_task_pdf(proj['unit_id'], task['id']))
 
-                    tasks[unit_code].append({
-                        'name': f"{task['abbreviation']}",
-                        'content': resp
-                    })
+                task_name =  f"{task['abbreviation']}"
+                task_name = task_name.replace('\\','-').replace('/','-')
+                tasks[unit_code].append({
+                    'name':task_name,
+                    'content': resp
+                })
 
         return tasks
+
